@@ -144,3 +144,119 @@ function unregisterCustomer() {
         alert("Customer not found!");
     }
 }
+
+
+    $(document).ready(function () {
+        let itemTableBody = $("#itemTableBody");
+
+        // Load items from local storage and display them
+        function loadItems() {
+            itemTableBody.empty();
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items.forEach(item => {
+                let row = `<tr data-id="${item.id}">
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.price}</td>
+                    <td>${item.quantity}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm edit-item">Edit</button>
+                        <button class="btn btn-danger btn-sm delete-item">Delete</button>
+                    </td>
+                </tr>`;
+                itemTableBody.append(row);
+            });
+        }
+
+        // Auto-generate item ID
+        function generateItemId() {
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            return items.length ? `ITM-${items.length + 1}` : "ITM-1";
+        }
+
+        // Add new item
+        $("#itemForm").on("submit", function (e) {
+            e.preventDefault();
+
+            let itemId = generateItemId();
+            let itemName = $("#itemName").val();
+            let itemPrice = parseFloat($("#itemPrice").val());
+            let itemQuantity = parseInt($("#itemQuantity").val());
+
+            let newItem = { id: itemId, name: itemName, price: itemPrice, quantity: itemQuantity };
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items.push(newItem);
+            localStorage.setItem("items", JSON.stringify(items));
+
+            loadItems();
+            this.reset();
+        });
+
+        // Find item by ID
+        function findItem() {
+            let itemId = $("#itemId").val();
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            let item = items.find(item => item.id === itemId);
+
+            if (item) {
+                $("#itemName").val(item.name);
+                $("#itemPrice").val(item.price);
+                $("#itemQuantity").val(item.quantity);
+            } else {
+                alert("Item not found");
+            }
+        }
+
+        // Update item
+        function updateItem() {
+            let itemId = $("#itemId").val();
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            let itemIndex = items.findIndex(item => item.id === itemId);
+
+            if (itemIndex !== -1) {
+                items[itemIndex].name = $("#itemName").val();
+                items[itemIndex].price = parseFloat($("#itemPrice").val());
+                items[itemIndex].quantity = parseInt($("#itemQuantity").val());
+                localStorage.setItem("items", JSON.stringify(items));
+                loadItems();
+                alert("Item updated successfully");
+            } else {
+                alert("Item not found");
+            }
+        }
+
+        // Delete item
+        function deleteItem(itemId) {
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            items = items.filter(item => item.id !== itemId);
+            localStorage.setItem("items", JSON.stringify(items));
+            loadItems();
+        }
+
+        // Event delegation for edit and delete buttons
+        itemTableBody.on("click", ".edit-item", function () {
+            let itemId = $(this).closest("tr").data("id");
+            let items = JSON.parse(localStorage.getItem("items")) || [];
+            let item = items.find(item => item.id === itemId);
+
+            if (item) {
+                $("#itemId").val(item.id);
+                $("#itemName").val(item.name);
+                $("#itemPrice").val(item.price);
+                $("#itemQuantity").val(item.quantity);
+            }
+        });
+
+        itemTableBody.on("click", ".delete-item", function () {
+            let itemId = $(this).closest("tr").data("id");
+            deleteItem(itemId);
+        });
+
+        // Initial load
+        loadItems();
+
+        // Attach functions to buttons
+        window.findItem = findItem;
+        window.updateItem = updateItem;
+    });
+
